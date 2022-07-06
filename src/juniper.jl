@@ -32,7 +32,8 @@ function JuniperIpoptWorkspace(
     integers = model.integer
     @assert length(integers) == length(x0)
     nt1 = options.subsolver_options.nt
-    subsolver_options = map(keys(nt1)) do k
+    ks = setdiff(keys(nt1), (:symbolic, :sparse))
+    subsolver_options = map(ks) do k
         string(k) => nt1[k]
     end
     nl_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, Dict(subsolver_options)...)
