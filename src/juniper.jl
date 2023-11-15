@@ -1,6 +1,6 @@
 @params struct JuniperIpoptOptions
     nt::NamedTuple
-    subsolver_options
+    subsolver_options::Any
     first_order::Bool
 end
 function JuniperIpoptOptions(;
@@ -12,7 +12,8 @@ function JuniperIpoptOptions(;
     ),
     kwargs...,
 )
-    first_order = !hasproperty(subsolver_options.nt, :hessian_approximation) ||
+    first_order =
+        !hasproperty(subsolver_options.nt, :hessian_approximation) ||
         subsolver_options.nt.hessian_approximation == "limited-memory"
     return JuniperIpoptOptions((; kwargs...), subsolver_options, first_order)
 end
@@ -26,8 +27,10 @@ end
     counter::Base.RefValue{Int}
 end
 function JuniperIpoptWorkspace(
-    model::VecModel, x0::AbstractVector = getinit(model);
-    options = JuniperIpoptOptions(), kwargs...,
+    model::VecModel,
+    x0::AbstractVector = getinit(model);
+    options = JuniperIpoptOptions(),
+    kwargs...,
 )
     integers = model.integer
     @assert length(integers) == length(x0)
@@ -42,19 +45,24 @@ function JuniperIpoptWorkspace(
         string(k) => nt2[k]
     end
     optimizer = JuMP.optimizer_with_attributes(
-        Juniper.Optimizer, "nl_solver" => nl_solver, Dict(solver_options)...,
+        Juniper.Optimizer,
+        "nl_solver" => nl_solver,
+        Dict(solver_options)...,
     )
     problem, counter = get_jump_problem(
-        model, copy(x0); first_order = options.first_order,
-        optimizer = optimizer, integers = integers,
+        model,
+        copy(x0);
+        first_order = options.first_order,
+        optimizer = optimizer,
+        integers = integers,
     )
     return JuniperIpoptWorkspace(model, problem, copy(x0), integers, options, counter)
 end
 @params struct JuniperIpoptResult <: AbstractResult
-    minimizer
-    minimum
-    problem
-    status
+    minimizer::Any
+    minimum::Any
+    problem::Any
+    status::Any
     fcalls::Int
 end
 
@@ -71,12 +79,16 @@ function optimize!(workspace::JuniperIpoptWorkspace)
     term_status = MOI.get(moi_model, MOI.TerminationStatus())
     primal_status = MOI.get(moi_model, MOI.PrimalStatus())
     return JuniperIpoptResult(
-        minimizer, objval, problem, (term_status, primal_status), counter[],
+        minimizer,
+        objval,
+        problem,
+        (term_status, primal_status),
+        counter[],
     )
 end
 
 struct JuniperIpoptAlg <: AbstractOptimizer end
 
-function Workspace(model::VecModel, optimizer::JuniperIpoptAlg, args...; kwargs...,)
+function Workspace(model::VecModel, optimizer::JuniperIpoptAlg, args...; kwargs...)
     return JuniperIpoptWorkspace(model, args...; kwargs...)
 end
