@@ -1,6 +1,6 @@
 name = "NonconvexJuniper"
 uuid = "611adb69-ebe7-45d0-83f5-90aabba2c123"
-authors = ["Mohamed Tarek <mohamed82008@gmail.com> and contributors"]
+authors = ["Mohamed Tarek <mohdibntarek@gmail.com> and contributors"]
 version = "0.4.0"
 
 [deps]
