@@ -8,7 +8,7 @@ using Reexport, Parameters, SparseArrays, Zygote
 @reexport using NonconvexCore, NonconvexIpopt
 using NonconvexCore: @params, VecModel, AbstractResult, JuMPProblem
 using NonconvexCore: AbstractOptimizer, get_jump_problem, nvalues
-import NonconvexCore: optimize!
+import NonconvexCore: optimize!, Workspace
 using Juniper
 
 include("juniper.jl")
