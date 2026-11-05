@@ -124,3 +124,19 @@ g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
         end
     end
 end
+
+@testset "first_order precedence" begin
+    # Regression test: an explicit first_order used to be overridden by a
+    # conflicting hessian_approximation in subsolver_options.
+    o = JuniperIpoptOptions(
+        first_order = true,
+        subsolver_options = IpoptOptions(first_order = false),
+    )
+    @test o.first_order == true
+    # Without an explicit first_order, the fallback derives it from the
+    # subsolver options.
+    o = JuniperIpoptOptions(
+        subsolver_options = IpoptOptions(first_order = false),
+    )
+    @test o.first_order == false
+end
