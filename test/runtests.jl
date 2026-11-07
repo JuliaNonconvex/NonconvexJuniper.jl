@@ -158,3 +158,13 @@ end
     @test isfinite(r.minimum)
     @test r.minimizer[1] ≈ round(r.minimizer[1])
 end
+
+@testset "solver capabilities" begin
+    caps = solver_capabilities(JuniperIpoptAlg())
+    @test caps isa ConstraintCapabilities
+    @test caps.eq === true
+    @test caps.ineq === true
+    @test caps.sd === false
+    @test caps.box === true
+    @test caps.integer === true
+end

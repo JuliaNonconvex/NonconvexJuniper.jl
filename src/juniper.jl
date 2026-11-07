@@ -99,6 +99,14 @@ end
 
 struct JuniperIpoptAlg <: AbstractOptimizer end
 
+NonconvexCore.solver_capabilities(::JuniperIpoptAlg) = ConstraintCapabilities(
+    eq = true,
+    ineq = true,
+    sd = false,
+    box = true,
+    integer = true,
+)
+
 function Workspace(model::VecModel, optimizer::JuniperIpoptAlg, args...; kwargs...)
     return JuniperIpoptWorkspace(model, args...; kwargs...)
 end
