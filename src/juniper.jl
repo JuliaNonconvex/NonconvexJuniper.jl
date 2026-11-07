@@ -2,10 +2,12 @@
     nt::NamedTuple
     subsolver_options::Any
     first_order::Bool
+    mip_solver::Any
 end
 function JuniperIpoptOptions(;
     first_order = nothing,
     linear_constraints = false,
+    mip_solver = nothing,
     subsolver_options = IpoptOptions(
         first_order = first_order === nothing ? true : first_order,
         linear_constraints = linear_constraints,
@@ -20,7 +22,7 @@ function JuniperIpoptOptions(;
         (!hasproperty(subsolver_options.nt, :hessian_approximation) ||
          subsolver_options.nt.hessian_approximation == "limited-memory") :
         first_order
-    return JuniperIpoptOptions((; kwargs...), subsolver_options, first_order)
+    return JuniperIpoptOptions((; kwargs...), subsolver_options, first_order, mip_solver)
 end
 
 @params mutable struct JuniperIpoptWorkspace <: Workspace
@@ -49,10 +51,13 @@ function JuniperIpoptWorkspace(
     solver_options = map(keys(nt2)) do k
         string(k) => nt2[k]
     end
+    juniper_options = Dict{String,Any}(solver_options...)
+    options.mip_solver === nothing ||
+        (juniper_options["mip_solver"] = options.mip_solver)
     optimizer = JuMP.optimizer_with_attributes(
         Juniper.Optimizer,
         "nl_solver" => nl_solver,
-        Dict(solver_options)...,
+        juniper_options...,
     )
     problem, counter = get_jump_problem(
         model,

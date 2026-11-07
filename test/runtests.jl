@@ -140,3 +140,21 @@ end
     )
     @test o.first_order == false
 end
+
+@testset "Cbc MIP sub-solver" begin
+    import Cbc
+    m = Model(f)
+    addvar!(m, [0.0, 0.0], [10.0, 10.0])
+    add_ineq_constraint!(m, x -> g(x, 2, 0))
+    add_ineq_constraint!(m, x -> g(x, -1, 1))
+    setinteger!(m, 1, true)
+
+    options = JuniperIpoptOptions(mip_solver = Cbc.Optimizer)
+    @test options.mip_solver === Cbc.Optimizer
+    r = NonconvexJuniper.optimize(m, JuniperIpoptAlg(), [1.234, 2.345], options = options)
+    # The integer-restricted optimum differs from the continuous one, so only
+    # check that the solve terminates with a finite objective and an integral
+    # minimizer.
+    @test isfinite(r.minimum)
+    @test r.minimizer[1] ≈ round(r.minimizer[1])
+end
