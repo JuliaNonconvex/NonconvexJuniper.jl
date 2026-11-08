@@ -105,6 +105,7 @@ NonconvexCore.solver_capabilities(::JuniperIpoptAlg) = ConstraintCapabilities(
     sd = false,
     box = true,
     integer = true,
+    infinite_bounds = true,
 )
 
 function Workspace(model::VecModel, optimizer::JuniperIpoptAlg, args...; kwargs...)
