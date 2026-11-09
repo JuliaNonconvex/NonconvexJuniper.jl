@@ -4,7 +4,7 @@ f(x::AbstractVector) = x[2] < 0 ? Inf : sqrt(x[2])
 g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
 
 @testset "First order - $first_order" for first_order in [true, false]
-    options = JuniperIpoptOptions(first_order = first_order)
+    options = JuniperIpoptOptions(first_order=first_order)
     @testset "Simple constraints" begin
         m = Model(f)
         addvar!(m, [0.0, 0.0], [10.0, 10.0])
@@ -12,19 +12,19 @@ g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
         add_ineq_constraint!(m, x -> g(x, -1, 1))
 
         alg = JuniperIpoptAlg()
-        r1 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+        r1 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
         global s1 = sum(r1.minimizer)
         @test abs(r1.minimum - sqrt(8 / 27)) < 1e-6
         @test norm(r1.minimizer - [1 / 3, 8 / 27]) < 1e-6
 
         setinteger!(m, 1, true)
-        r2 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+        r2 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
         global s2 = sum(r2.minimizer)
         @test r2.minimizer[1] - round(Int, r2.minimizer[1]) ≈ 0 atol = 1e-7
 
         setinteger!(m, 1, false)
         setinteger!(m, 2, true)
-        r3 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+        r3 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
         global s3 = sum(r3.minimizer)
         @test r3.minimizer[2] - round(Int, r3.minimizer[2]) ≈ 0 atol = 1e-7
     end
@@ -36,7 +36,7 @@ g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
         add_ineq_constraint!(m, x -> g(x, -1, 1))
         add_eq_constraint!(m, x -> sum(x) - s1)
         alg = JuniperIpoptAlg()
-        r1 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+        r1 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
         @test abs(r1.minimum - sqrt(8 / 27)) < 1e-6
         @test norm(r1.minimizer - [1 / 3, 8 / 27]) < 1e-6
 
@@ -46,7 +46,7 @@ g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
         add_ineq_constraint!(m, x -> g(x, -1, 1))
         add_eq_constraint!(m, x -> sum(x) - s2)
         setinteger!(m, 1, true)
-        r2 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+        r2 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
         @test r2.minimizer[1] - round(Int, r2.minimizer[1]) ≈ 0 atol = 1e-7
 
         m = Model(f)
@@ -55,7 +55,7 @@ g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
         add_ineq_constraint!(m, x -> g(x, -1, 1))
         add_eq_constraint!(m, x -> sum(x) - s3)
         setinteger!(m, 2, true)
-        r3 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+        r3 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
         @test r3.minimizer[2] - round(Int, r3.minimizer[2]) ≈ 0 atol = 1e-7
     end
 
@@ -65,17 +65,17 @@ g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
         add_ineq_constraint!(m, FunctionWrapper(x -> [g(x, 2, 0), g(x, -1, 1)], 2))
 
         alg = JuniperIpoptAlg()
-        r1 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+        r1 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
         @test abs(r1.minimum - sqrt(8 / 27)) < 1e-6
         @test norm(r1.minimizer - [1 / 3, 8 / 27]) < 1e-6
 
         setinteger!(m, 1, true)
-        r2 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+        r2 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
         @test r2.minimizer[1] - round(Int, r2.minimizer[1]) ≈ 0 atol = 1e-7
 
         setinteger!(m, 1, false)
         setinteger!(m, 2, true)
-        r3 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+        r3 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
         @test r3.minimizer[2] - round(Int, r3.minimizer[2]) ≈ 0 atol = 1e-7
     end
 
@@ -87,17 +87,17 @@ g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
             add_ineq_constraint!(m, x -> g(x, -1, 1))
 
             alg = JuniperIpoptAlg()
-            r1 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+            r1 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
             @test abs(r1.minimum - sqrt(8 / 27)) < 1e-6
             @test norm(r1.minimizer - [1 / 3, 8 / 27]) < 1e-6
 
             setinteger!(m, 1, true)
-            r2 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+            r2 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
             @test r2.minimizer[1] - round(Int, r2.minimizer[1]) ≈ 0 atol = 1e-7
 
             setinteger!(m, 1, false)
             setinteger!(m, 2, true)
-            r3 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+            r3 = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
             @test r3.minimizer[2] - round(Int, r3.minimizer[2]) ≈ 0 atol = 1e-7
         end
         @testset "Infinite lower bound" begin
@@ -107,7 +107,7 @@ g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
             add_ineq_constraint!(m, x -> g(x, -1, 1))
 
             alg = JuniperIpoptAlg()
-            r = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+            r = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
             @test abs(r.minimum - sqrt(8 / 27)) < 1e-6
             @test norm(r.minimizer - [1 / 3, 8 / 27]) < 1e-6
         end
@@ -118,7 +118,7 @@ g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
             add_ineq_constraint!(m, x -> g(x, -1, 1))
 
             alg = JuniperIpoptAlg()
-            r = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options = options)
+            r = NonconvexJuniper.optimize(m, alg, [1.234, 2.345], options=options)
             @test abs(r.minimum - sqrt(8 / 27)) < 1e-6
             @test norm(r.minimizer - [1 / 3, 8 / 27]) < 1e-6
         end
@@ -129,15 +129,12 @@ end
     # Regression test: an explicit first_order used to be overridden by a
     # conflicting hessian_approximation in subsolver_options.
     o = JuniperIpoptOptions(
-        first_order = true,
-        subsolver_options = IpoptOptions(first_order = false),
+        first_order=true, subsolver_options=IpoptOptions(first_order=false)
     )
     @test o.first_order == true
     # Without an explicit first_order, the fallback derives it from the
     # subsolver options.
-    o = JuniperIpoptOptions(
-        subsolver_options = IpoptOptions(first_order = false),
-    )
+    o = JuniperIpoptOptions(subsolver_options=IpoptOptions(first_order=false))
     @test o.first_order == false
 end
 
@@ -149,12 +146,16 @@ end
     add_ineq_constraint!(m, x -> g(x, -1, 1))
     setinteger!(m, 1, true)
 
-    options = JuniperIpoptOptions(mip_solver = Cbc.Optimizer)
+    options = JuniperIpoptOptions(mip_solver=Cbc.Optimizer)
     @test options.mip_solver === Cbc.Optimizer
-    r = NonconvexJuniper.optimize(m, JuniperIpoptAlg(), [1.234, 2.345], options = options)
+    r = NonconvexJuniper.optimize(m, JuniperIpoptAlg(), [1.234, 2.345], options=options)
     # The integer-restricted optimum differs from the continuous one, so only
     # check that the solve terminates with a finite objective and an integral
     # minimizer.
     @test isfinite(r.minimum)
     @test r.minimizer[1] ≈ round(r.minimizer[1])
 end
+
+using Aqua, JET
+Aqua.test_all(NonconvexJuniper)
+JET.test_package(NonconvexJuniper; target_modules = (NonconvexJuniper,))

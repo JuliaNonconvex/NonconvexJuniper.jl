@@ -5,23 +5,26 @@
     mip_solver::Any
 end
 function JuniperIpoptOptions(;
-    first_order = nothing,
-    linear_constraints = false,
-    mip_solver = nothing,
-    subsolver_options = IpoptOptions(
-        first_order = first_order === nothing ? true : first_order,
-        linear_constraints = linear_constraints,
+    first_order=nothing,
+    linear_constraints=false,
+    mip_solver=nothing,
+    subsolver_options=IpoptOptions(;
+        first_order=first_order === nothing ? true : first_order,
+        linear_constraints=linear_constraints,
     ),
     kwargs...,
 )
     # Only derive first_order from the subsolver options when it was not given
     # explicitly; an explicit first_order now always wins over a conflicting
     # hessian_approximation in subsolver_options.
-    first_order =
-        first_order === nothing ?
-        (!hasproperty(subsolver_options.nt, :hessian_approximation) ||
-         subsolver_options.nt.hessian_approximation == "limited-memory") :
+    first_order = if first_order === nothing
+        (
+        !hasproperty(subsolver_options.nt, :hessian_approximation) ||
+        subsolver_options.nt.hessian_approximation == "limited-memory"
+    )
+    else
         first_order
+    end
     return JuniperIpoptOptions((; kwargs...), subsolver_options, first_order, mip_solver)
 end
 
@@ -35,8 +38,8 @@ end
 end
 function JuniperIpoptWorkspace(
     model::VecModel,
-    x0::AbstractVector = getinit(model);
-    options = JuniperIpoptOptions(),
+    x0::AbstractVector=getinit(model);
+    options=JuniperIpoptOptions(),
     kwargs...,
 )
     integers = model.integer
@@ -44,27 +47,24 @@ function JuniperIpoptWorkspace(
     nt1 = options.subsolver_options.nt
     ks = setdiff(keys(nt1), (:symbolic, :sparse))
     subsolver_options = map(ks) do k
-        string(k) => nt1[k]
+        return string(k) => nt1[k]
     end
     nl_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, Dict(subsolver_options)...)
     nt2 = options.nt
     solver_options = map(keys(nt2)) do k
-        string(k) => nt2[k]
+        return string(k) => nt2[k]
     end
     juniper_options = Dict{String,Any}(solver_options...)
-    options.mip_solver === nothing ||
-        (juniper_options["mip_solver"] = options.mip_solver)
+    options.mip_solver === nothing || (juniper_options["mip_solver"] = options.mip_solver)
     optimizer = JuMP.optimizer_with_attributes(
-        Juniper.Optimizer,
-        "nl_solver" => nl_solver,
-        juniper_options...,
+        Juniper.Optimizer, "nl_solver" => nl_solver, juniper_options...
     )
     problem, counter = get_jump_problem(
         model,
         copy(x0);
-        first_order = options.first_order,
-        optimizer = optimizer,
-        integers = integers,
+        first_order=options.first_order,
+        optimizer=optimizer,
+        integers=integers,
     )
     return JuniperIpoptWorkspace(model, problem, copy(x0), integers, options, counter)
 end
@@ -89,11 +89,7 @@ function optimize!(workspace::JuniperIpoptWorkspace)
     term_status = MOI.get(moi_model, MOI.TerminationStatus())
     primal_status = MOI.get(moi_model, MOI.PrimalStatus())
     return JuniperIpoptResult(
-        minimizer,
-        objval,
-        problem,
-        (term_status, primal_status),
-        counter[],
+        minimizer, objval, problem, (term_status, primal_status), counter[]
     )
 end
 
