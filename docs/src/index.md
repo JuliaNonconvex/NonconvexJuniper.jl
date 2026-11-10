@@ -1,5 +1,7 @@
 # First and second order mixed integer nonlinear programming algorithms
 
+![JuliaNonconvex logo](https://raw.githubusercontent.com/JuliaNonconvex/NonconvexJuniper.jl/master/docs/src/assets/logo.png)
+
 ## Description
 
 There are 2 first and second order MINLP solvers available in `Nonconvex`:
