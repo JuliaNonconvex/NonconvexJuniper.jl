@@ -19,9 +19,9 @@ function JuniperIpoptOptions(;
     # hessian_approximation in subsolver_options.
     first_order = if first_order === nothing
         (
-        !hasproperty(subsolver_options.nt, :hessian_approximation) ||
-        subsolver_options.nt.hessian_approximation == "limited-memory"
-    )
+            !hasproperty(subsolver_options.nt, :hessian_approximation) ||
+            subsolver_options.nt.hessian_approximation == "limited-memory"
+        )
     else
         first_order
     end
