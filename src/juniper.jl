@@ -14,6 +14,28 @@ function JuniperIpoptOptions(;
     ),
     kwargs...,
 )
+    return _juniper_ipopt_options((;
+        first_order, linear_constraints, mip_solver, subsolver_options, kwargs...
+    ))
+end
+# A positional-NamedTuple path: JET (on Julia 1.13) cannot resolve
+# `Core.kwcall` on `Base.Pairs` forwarding during its virtual top-level
+# replay, so forwarded options go through this positional method.
+function JuniperIpoptOptions(nt::NamedTuple)
+    return _juniper_ipopt_options(nt)
+end
+function _juniper_ipopt_options(nt::NamedTuple)
+    first_order = get(nt, :first_order, nothing)
+    linear_constraints = get(nt, :linear_constraints, false)
+    mip_solver = get(nt, :mip_solver, nothing)
+    subsolver_options = get(
+        nt,
+        :subsolver_options,
+        IpoptOptions(;
+            first_order=first_order === nothing ? true : first_order,
+            linear_constraints=linear_constraints,
+        ),
+    )
     # Only derive first_order from the subsolver options when it was not given
     # explicitly; an explicit first_order now always wins over a conflicting
     # hessian_approximation in subsolver_options.
@@ -25,7 +47,9 @@ function JuniperIpoptOptions(;
     else
         first_order
     end
-    return JuniperIpoptOptions((; kwargs...), subsolver_options, first_order, mip_solver)
+    known = (:first_order, :linear_constraints, :mip_solver, :subsolver_options)
+    rest = [k for k in keys(nt) if k ∉ known]
+    return JuniperIpoptOptions(nt[Tuple(rest)], subsolver_options, first_order, mip_solver)
 end
 
 @params mutable struct JuniperIpoptWorkspace <: Workspace
@@ -38,35 +62,52 @@ end
 end
 function JuniperIpoptWorkspace(
     model::VecModel,
-    x0::AbstractVector=getinit(model);
+    x0::AbstractVector=NonconvexCore.getinit(model);
     options=JuniperIpoptOptions(),
     kwargs...,
+)
+    return _juniper_ipopt_workspace(model, x0, options)
+end
+# A positional-NamedTuple path: JET (on Julia 1.13) cannot resolve
+# `Core.kwcall` on `Base.Pairs` forwarding during its virtual top-level
+# replay, so forwarded options go through this positional method.
+function JuniperIpoptWorkspace(model::VecModel, x0::AbstractVector, nt::NamedTuple)
+    options = haskey(nt, :options) ? nt[:options] : JuniperIpoptOptions((;))
+    return _juniper_ipopt_workspace(model, x0, options)
+end
+function _juniper_ipopt_workspace(
+    model::VecModel, x0::AbstractVector, options::JuniperIpoptOptions
 )
     integers = model.integer
     @assert length(integers) == length(x0)
     nt1 = options.subsolver_options.nt
     ks = setdiff(keys(nt1), (:symbolic, :sparse))
-    subsolver_options = map(ks) do k
-        return string(k) => nt1[k]
-    end
-    nl_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, Dict(subsolver_options)...)
+    subsolver_options = Dict{String,Any}(string(k) => nt1[k] for k in ks)
+    nl_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, subsolver_options...)
     nt2 = options.nt
-    solver_options = map(keys(nt2)) do k
-        return string(k) => nt2[k]
-    end
-    juniper_options = Dict{String,Any}(solver_options...)
-    options.mip_solver === nothing || (juniper_options["mip_solver"] = options.mip_solver)
+    solver_options = Dict{String,Any}(string(k) => nt2[k] for k in keys(nt2))
+    options.mip_solver === nothing || (solver_options["mip_solver"] = options.mip_solver)
     optimizer = JuMP.optimizer_with_attributes(
-        Juniper.Optimizer, "nl_solver" => nl_solver, juniper_options...
+        Juniper.Optimizer, "nl_solver" => nl_solver, solver_options...
     )
-    problem, counter = get_jump_problem(
-        model,
-        copy(x0);
-        first_order=options.first_order,
-        optimizer=optimizer,
-        integers=integers,
+    objective = NonconvexCore.getobjective(model)
+    objective === nothing && throw(ArgumentError("The model has no objective."))
+    ineq = isempty(model.ineq_constraints.fs) ? nothing : model.ineq_constraints
+    eq = isempty(model.eq_constraints.fs) ? nothing : model.eq_constraints
+    obj = NonconvexCore.CountingFunction(objective)
+    problem = NonconvexCore.get_jump_problem(
+        obj,
+        ineq,
+        eq,
+        copy(x0),
+        integers,
+        NonconvexCore.getmin(model),
+        NonconvexCore.getmax(model),
+        options.first_order,
+        optimizer,
+        NonconvexCore.DEFAULT_AD_BACKEND[],
     )
-    return JuniperIpoptWorkspace(model, problem, copy(x0), integers, options, counter)
+    return JuniperIpoptWorkspace(model, problem, copy(x0), integers, options, obj.counter)
 end
 @params struct JuniperIpoptResult <: AbstractResult
     minimizer::Any
@@ -111,6 +152,13 @@ function NonconvexCore.solver_capabilities(::JuniperIpoptAlg)
     )
 end
 
-function Workspace(model::VecModel, optimizer::JuniperIpoptAlg, args...; kwargs...)
-    return JuniperIpoptWorkspace(model, args...; kwargs...)
+function Workspace(
+    model::VecModel, optimizer::JuniperIpoptAlg, x0::AbstractVector; kwargs...
+)
+    return JuniperIpoptWorkspace(model, x0, (; kwargs...))
+end
+
+# Without an explicit start point, default to the model's initial values.
+function Workspace(model::VecModel, optimizer::JuniperIpoptAlg; kwargs...)
+    return JuniperIpoptWorkspace(model, NonconvexCore.getinit(model), (; kwargs...))
 end

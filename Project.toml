@@ -17,9 +17,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
-Aqua = "0.8, 0.9"
 Cbc = "1.4"
-JET = "0.9, 0.10, 0.11, 0.12, 0.13"
 Test = "1"
 Ipopt = "0.9, 1"
 JuMP = "1"
@@ -27,18 +25,20 @@ Juniper = "0.9"
 LinearAlgebra = "1"
 MathOptInterface = "1"
 NonconvexCore = "2"
-NonconvexIpopt = "0.5, 0.6, 0.7"
+NonconvexIpopt = "0.5, 0.6, 0.7, 0.8"
 Parameters = "0.12, 0.13"
 Reexport = "1"
 SparseArrays = "1"
 Zygote = "0.6, 0.7"
+TestItemRunner = "0.1, 0.2, 1"
+TestItems = "0.1, 1"
 julia = "1.10"
 
 [extras]
-Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
-JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
 Cbc = "9961bab8-2fa3-5c5a-9d89-47fab24efd76"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+TestItemRunner = "f8b46487-2199-4994-9208-9a1283c18c0a"
+TestItems = "1c621080-faea-4a02-84b6-bbd5e436b8fe"
 
 [targets]
-test = ["Cbc", "Test", "Aqua", "JET"]
+test = ["Cbc", "Test", "TestItemRunner", "TestItems"]
