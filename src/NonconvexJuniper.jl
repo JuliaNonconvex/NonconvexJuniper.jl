@@ -2,7 +2,9 @@ module NonconvexJuniper
 
 export JuniperIpoptAlg, JuniperIpoptOptions, IpoptAlg, IpoptOptions
 
-import JuMP, Ipopt, MathOptInterface
+using JuMP: JuMP
+using Ipopt: Ipopt
+using MathOptInterface: MathOptInterface
 const MOI = MathOptInterface
 using Reexport, Parameters, SparseArrays, Zygote
 @reexport using NonconvexCore, NonconvexIpopt

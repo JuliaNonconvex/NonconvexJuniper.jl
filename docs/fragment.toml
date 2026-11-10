@@ -1,0 +1,11 @@
+name = "Juniper"
+modules = ["NonconvexJuniper"]
+doctest_setup = "using NonconvexJuniper"
+
+[[pages]]
+title = "Juniper"
+file = "index.md"
+
+[[pages]]
+title = "Docstrings"
+file = "docstrings.md"
