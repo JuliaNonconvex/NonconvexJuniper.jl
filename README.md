@@ -1,6 +1,9 @@
+<p align="center">
+  <img src="assets/logo.png" width="400" alt="NonconvexJuniper.jl logo">
+</p>
+
 # NonconvexJuniper
 
-<img src="https://raw.githubusercontent.com/JuliaNonconvex/NonconvexJuniper.jl/master/docs/src/assets/logo.png" width="120" align="right"/>
 
 [![Documentation (stable)](https://img.shields.io/badge/docs-stable-blue.svg)](https://julianonconvex.github.io/NonconvexJuniper.jl/stable)
 [![Documentation (dev)](https://img.shields.io/badge/docs-dev-blue.svg)](https://julianonconvex.github.io/NonconvexJuniper.jl/dev)
