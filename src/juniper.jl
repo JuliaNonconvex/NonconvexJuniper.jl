@@ -1,3 +1,9 @@
+function _warn_callback_ignored()
+    @warn "The `callback` keyword is not supported by NonconvexJuniper and will be ignored."
+    return nothing
+end
+_warn_callback_ignored(nt::NamedTuple) = haskey(nt, :callback) && _warn_callback_ignored()
+
 @params struct JuniperIpoptOptions
     nt::NamedTuple
     subsolver_options::Any
@@ -66,14 +72,44 @@ function JuniperIpoptWorkspace(
     options=JuniperIpoptOptions(),
     kwargs...,
 )
-    return _juniper_ipopt_workspace(model, x0, options)
+    haskey(kwargs, :callback) && _warn_callback_ignored()
+    ks = Tuple(k for k in keys(kwargs) if k !== :callback)
+    rest = kwargs[ks]
+    merged = isempty(rest) ? options : _juniper_merge_options(options, rest)
+    return _juniper_ipopt_workspace(model, x0, merged)
 end
 # A positional-NamedTuple path: JET (on Julia 1.13) cannot resolve
 # `Core.kwcall` on `Base.Pairs` forwarding during its virtual top-level
 # replay, so forwarded options go through this positional method.
 function JuniperIpoptWorkspace(model::VecModel, x0::AbstractVector, nt::NamedTuple)
-    options = haskey(nt, :options) ? nt[:options] : JuniperIpoptOptions((;))
+    _warn_callback_ignored(nt)
+    ks = Tuple(k for k in keys(nt) if k !== :callback)
+    opt_nt = nt[ks]
+    options = if haskey(opt_nt, :options)
+        rest = (; (k => v for (k, v) in pairs(opt_nt) if k !== :options)...)
+        if isempty(rest)
+            opt_nt[:options]
+        else
+            _juniper_merge_options(opt_nt[:options], rest)
+        end
+    else
+        # Forward direct option kwargs (e.g. `first_order`) to the options
+        # constructor instead of silently dropping them; `callback` is
+        # handled above.
+        JuniperIpoptOptions(opt_nt)
+    end
     return _juniper_ipopt_workspace(model, x0, options)
+end
+# Direct keyword arguments take precedence over an explicitly passed
+# `options` object.
+function _juniper_merge_options(options::JuniperIpoptOptions, rest::NamedTuple)
+    base = (;
+        options.nt...,
+        first_order=options.first_order,
+        mip_solver=options.mip_solver,
+        subsolver_options=options.subsolver_options,
+    )
+    return JuniperIpoptOptions(; base..., rest...)
 end
 function _juniper_ipopt_workspace(
     model::VecModel, x0::AbstractVector, options::JuniperIpoptOptions
