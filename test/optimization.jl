@@ -192,10 +192,10 @@ end
     add_ineq_constraint!(m, x -> g(x, 2, 0))
     vm, x0, _ = NonconvexCore.tovecmodel(m, [1.234, 2.345])
 
-    @test_logs (:warn, r"callback") match_mode=:any Workspace(
+    @test_logs (:warn, r"callback") match_mode = :any Workspace(
         vm, JuniperIpoptAlg(), x0; callback=x -> nothing
     )
-    @test_logs (:warn, r"callback") match_mode=:any Workspace(
+    @test_logs (:warn, r"callback") match_mode = :any Workspace(
         vm, JuniperIpoptAlg(); callback=x -> nothing
     )
 end
@@ -219,6 +219,8 @@ end
     w = Workspace(vm, JuniperIpoptAlg(), x0; first_order=false)
     @test w.options.first_order === false
     # an explicit `options` argument is still honored, and direct kwargs win
-    w = Workspace(vm, JuniperIpoptAlg(), x0; options=JuniperIpoptOptions(), first_order=false)
+    w = Workspace(
+        vm, JuniperIpoptAlg(), x0; options=JuniperIpoptOptions(), first_order=false
+    )
     @test w.options.first_order === false
 end

@@ -87,7 +87,11 @@ function JuniperIpoptWorkspace(model::VecModel, x0::AbstractVector, nt::NamedTup
     opt_nt = nt[ks]
     options = if haskey(opt_nt, :options)
         rest = (; (k => v for (k, v) in pairs(opt_nt) if k !== :options)...)
-        isempty(rest) ? opt_nt[:options] : _juniper_merge_options(opt_nt[:options], rest)
+        if isempty(rest)
+            opt_nt[:options]
+        else
+            _juniper_merge_options(opt_nt[:options], rest)
+        end
     else
         # Forward direct option kwargs (e.g. `first_order`) to the options
         # constructor instead of silently dropping them; `callback` is
