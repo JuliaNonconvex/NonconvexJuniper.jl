@@ -4,6 +4,24 @@ function _warn_callback_ignored()
 end
 _warn_callback_ignored(nt::NamedTuple) = haskey(nt, :callback) && _warn_callback_ignored()
 
+"""
+    JuniperIpoptOptions(; first_order=nothing, linear_constraints=false,
+                        mip_solver=nothing, subsolver_options=IpoptOptions(...), kwargs...)
+
+Options for [`JuniperIpoptAlg`](@ref), passed to `optimize` as
+`options = ...`.
+
+- `first_order`: passed to the Ipopt subsolver (defaults to `true` unless
+  given);
+- `linear_constraints`: declare the constraints linear (skips repeated
+  Jacobian evaluation);
+- `mip_solver`: a JuMP-compatible mixed-integer solver for the MIP
+  subproblems (defaults to Cbc);
+- `subsolver_options`: an `IpoptOptions` for the nonlinear subsolver.
+
+All remaining keyword arguments are forwarded to Juniper. Note that the
+`callback` keyword is not supported and will be ignored.
+"""
 @params struct JuniperIpoptOptions
     nt::NamedTuple
     subsolver_options::Any
@@ -170,6 +188,16 @@ function optimize!(workspace::JuniperIpoptWorkspace)
     )
 end
 
+"""
+    JuniperIpoptAlg()
+
+A mixed-integer nonlinear programming (MINLP) solver combining the
+branch-and-bound algorithm of [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)
+with Ipopt as the nonlinear subsolver and Cbc as the mixed-integer subsolver,
+exposed through the Nonconvex interface. Supports nonlinear inequality and
+equality constraints, box constraints and integer variables. Options are set
+through [`JuniperIpoptOptions`](@ref).
+"""
 struct JuniperIpoptAlg <: AbstractOptimizer end
 
 function NonconvexCore.solver_capabilities(::JuniperIpoptAlg)
