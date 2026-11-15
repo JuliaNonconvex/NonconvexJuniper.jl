@@ -161,10 +161,22 @@ function optimize!(workspace::JuniperIpoptWorkspace)
     moi_model = JuMP.backend(jump_model)
     MOI.set.(Ref(moi_model), Ref(MOI.VariablePrimalStart()), workspace.problem.vars, x0)
     MOI.optimize!(moi_model)
-    minimizer = MOI.get(moi_model, MOI.VariablePrimal(), jump_problem.vars)
-    objval = MOI.get(moi_model, MOI.ObjectiveValue())
     term_status = MOI.get(moi_model, MOI.TerminationStatus())
     primal_status = MOI.get(moi_model, MOI.PrimalStatus())
+    if (
+        term_status == MOI.INFEASIBLE ||
+        term_status == MOI.INFEASIBLE_OR_UNBOUNDED ||
+        term_status == MOI.LOCALLY_INFEASIBLE
+    ) &&
+        !(primal_status == MOI.FEASIBLE_POINT || primal_status == MOI.NEARLY_FEASIBLE_POINT)
+        # No incumbent is available on infeasible termination; extracting the
+        # primal would throw an opaque MOI exception.
+        return JuniperIpoptResult(
+            fill(NaN, length(x0)), NaN, problem, (term_status, primal_status), counter[]
+        )
+    end
+    minimizer = MOI.get(moi_model, MOI.VariablePrimal(), jump_problem.vars)
+    objval = MOI.get(moi_model, MOI.ObjectiveValue())
     return JuniperIpoptResult(
         minimizer, objval, problem, (term_status, primal_status), counter[]
     )
