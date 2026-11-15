@@ -39,3 +39,20 @@ end
     @test o3.nt == NamedTuple()
     @test o3.mip_solver === nothing
 end
+
+@testitem "Infeasible MIP returns a NaN result" begin
+    using NonconvexJuniper, NonconvexCore, Test
+
+    # x1 + x2 >= 1 and x1 + x2 <= 0 over binaries: infeasible. The result
+    # extraction used to throw an opaque MOI exception on infeasible
+    # termination; it must return a NaN-filled result instead.
+    m = Model(x -> x[1] + x[2])
+    addvar!(m, [0.0, 0.0], [1.0, 1.0])
+    setinteger!(m, 1:2, [true, true])
+    add_ineq_constraint!(m, x -> 0.5 - x[1] - x[2])
+    add_ineq_constraint!(m, x -> x[1] + x[2] - 0.0)
+    r = NonconvexCore.optimize(m, JuniperIpoptAlg(), [0.0, 0.0])
+    @test r isa NonconvexJuniper.JuniperIpoptResult
+    @test all(isnan, r.minimizer)
+    @test isnan(r.minimum)
+end
