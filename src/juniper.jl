@@ -98,8 +98,9 @@ function JuniperIpoptWorkspace(
 end
 # A positional-NamedTuple path: JET (on Julia 1.13) cannot resolve
 # `Core.kwcall` on `Base.Pairs` forwarding during its virtual top-level
-# replay, so forwarded options go through this positional method.
-function JuniperIpoptWorkspace(model::VecModel, x0::AbstractVector, nt::NamedTuple)
+# replay, so forwarded options go through this positional helper (the public
+# 3-argument method below is a thin alias).
+function _juniper_ipopt_workspace_nt(model::VecModel, x0::AbstractVector, nt::NamedTuple)
     _warn_callback_ignored(nt)
     ks = Tuple(k for k in keys(nt) if k !== :callback)
     opt_nt = nt[ks]
@@ -117,6 +118,9 @@ function JuniperIpoptWorkspace(model::VecModel, x0::AbstractVector, nt::NamedTup
         JuniperIpoptOptions(opt_nt)
     end
     return _juniper_ipopt_workspace(model, x0, options)
+end
+function JuniperIpoptWorkspace(model::VecModel, x0::AbstractVector, nt::NamedTuple)
+    return _juniper_ipopt_workspace_nt(model, x0, nt)
 end
 # Direct keyword arguments take precedence over an explicitly passed
 # `options` object.
@@ -219,10 +223,17 @@ end
 function Workspace(
     model::VecModel, optimizer::JuniperIpoptAlg, x0::AbstractVector; kwargs...
 )
-    return JuniperIpoptWorkspace(model, x0, (; kwargs...))
+    return _juniper_ipopt_workspace_nt(model, x0, (; kwargs...))
 end
 
 # Without an explicit start point, default to the model's initial values.
+# Route through the x0-annotated method (like the Ipopt wrapper) so JET can
+# resolve the `getinit(model)::Any` argument against `x0::AbstractVector`.
 function Workspace(model::VecModel, optimizer::JuniperIpoptAlg; kwargs...)
-    return JuniperIpoptWorkspace(model, NonconvexCore.getinit(model), (; kwargs...))
+    return Workspace(model, optimizer, NonconvexCore.getinit(model); kwargs...)
 end
+
+# A private positional-NamedTuple path: JET (on Julia 1.13) cannot resolve
+# `Core.kwcall` on `Base.Pairs` forwarding during its virtual top-level
+# replay, so forwarded options go through the positional helper
+# `_juniper_ipopt_workspace_nt` defined above.
