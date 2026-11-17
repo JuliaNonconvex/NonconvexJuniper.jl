@@ -4,6 +4,24 @@ function _warn_callback_ignored()
 end
 _warn_callback_ignored(nt::NamedTuple) = haskey(nt, :callback) && _warn_callback_ignored()
 
+"""
+    JuniperIpoptOptions(; first_order=nothing, linear_constraints=false,
+                        mip_solver=nothing, subsolver_options=IpoptOptions(...), kwargs...)
+
+Options for [`JuniperIpoptAlg`](@ref), passed to `optimize` as
+`options = ...`.
+
+- `first_order`: passed to the Ipopt subsolver (defaults to `true` unless
+  given);
+- `linear_constraints`: declare the constraints linear (skips repeated
+  Jacobian evaluation);
+- `mip_solver`: a JuMP-compatible mixed-integer solver for the MIP
+  subproblems (defaults to Cbc);
+- `subsolver_options`: an `IpoptOptions` for the nonlinear subsolver.
+
+All remaining keyword arguments are forwarded to Juniper. Note that the
+`callback` keyword is not supported and will be ignored.
+"""
 @params struct JuniperIpoptOptions
     nt::NamedTuple
     subsolver_options::Any
@@ -80,8 +98,9 @@ function JuniperIpoptWorkspace(
 end
 # A positional-NamedTuple path: JET (on Julia 1.13) cannot resolve
 # `Core.kwcall` on `Base.Pairs` forwarding during its virtual top-level
-# replay, so forwarded options go through this positional method.
-function JuniperIpoptWorkspace(model::VecModel, x0::AbstractVector, nt::NamedTuple)
+# replay, so forwarded options go through this positional helper (the public
+# 3-argument method below is a thin alias).
+function _juniper_ipopt_workspace_nt(model::VecModel, x0::AbstractVector, nt::NamedTuple)
     _warn_callback_ignored(nt)
     ks = Tuple(k for k in keys(nt) if k !== :callback)
     opt_nt = nt[ks]
@@ -99,6 +118,9 @@ function JuniperIpoptWorkspace(model::VecModel, x0::AbstractVector, nt::NamedTup
         JuniperIpoptOptions(opt_nt)
     end
     return _juniper_ipopt_workspace(model, x0, options)
+end
+function JuniperIpoptWorkspace(model::VecModel, x0::AbstractVector, nt::NamedTuple)
+    return _juniper_ipopt_workspace_nt(model, x0, nt)
 end
 # Direct keyword arguments take precedence over an explicitly passed
 # `options` object.
@@ -182,6 +204,16 @@ function optimize!(workspace::JuniperIpoptWorkspace)
     )
 end
 
+"""
+    JuniperIpoptAlg()
+
+A mixed-integer nonlinear programming (MINLP) solver combining the
+branch-and-bound algorithm of [Juniper.jl](https://github.com/lanl-ansi/Juniper.jl)
+with Ipopt as the nonlinear subsolver and Cbc as the mixed-integer subsolver,
+exposed through the Nonconvex interface. Supports nonlinear inequality and
+equality constraints, box constraints and integer variables. Options are set
+through [`JuniperIpoptOptions`](@ref).
+"""
 struct JuniperIpoptAlg <: AbstractOptimizer end
 
 function NonconvexCore.solver_capabilities(::JuniperIpoptAlg)
@@ -203,10 +235,17 @@ end
 function Workspace(
     model::VecModel, optimizer::JuniperIpoptAlg, x0::AbstractVector; kwargs...
 )
-    return JuniperIpoptWorkspace(model, x0, (; kwargs...))
+    return _juniper_ipopt_workspace_nt(model, x0, (; kwargs...))
 end
 
 # Without an explicit start point, default to the model's initial values.
+# Route through the x0-annotated method (like the Ipopt wrapper) so JET can
+# resolve the `getinit(model)::Any` argument against `x0::AbstractVector`.
 function Workspace(model::VecModel, optimizer::JuniperIpoptAlg; kwargs...)
-    return JuniperIpoptWorkspace(model, NonconvexCore.getinit(model), (; kwargs...))
+    return Workspace(model, optimizer, NonconvexCore.getinit(model); kwargs...)
 end
+
+# A private positional-NamedTuple path: JET (on Julia 1.13) cannot resolve
+# `Core.kwcall` on `Base.Pairs` forwarding during its virtual top-level
+# replay, so forwarded options go through the positional helper
+# `_juniper_ipopt_workspace_nt` defined above.
