@@ -1,5 +1,10 @@
 # NEWS
 
+## 0.6.3
+
+- Added docstrings for `JuniperIpoptAlg` and `JuniperIpoptOptions` (REPL help and API reference).
+
+
 ## 0.6.2
 
 - Infeasible terminations without an incumbent return a NaN-filled
