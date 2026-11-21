@@ -1,4 +1,4 @@
-name = "Juniper"
+name = "NonconvexJuniper"
 modules = ["NonconvexJuniper"]
 doctest_setup = "using NonconvexJuniper"
 

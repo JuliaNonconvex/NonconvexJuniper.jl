@@ -1,4 +1,4 @@
-# First and second order mixed integer nonlinear programming algorithms
+# NonconvexJuniper
 
 ```@raw html
 <p align="center">
