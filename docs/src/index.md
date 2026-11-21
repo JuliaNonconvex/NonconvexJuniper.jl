@@ -1,4 +1,4 @@
-# First and second order mixed integer nonlinear programming algorithms
+# NonconvexJuniper
 
 ![JuliaNonconvex logo](https://raw.githubusercontent.com/JuliaNonconvex/NonconvexJuniper.jl/master/docs/src/assets/logo.png)
 
