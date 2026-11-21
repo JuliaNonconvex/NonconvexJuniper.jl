@@ -144,7 +144,7 @@ end
 
 @testitem "Cbc MIP sub-solver" begin
     using NonconvexJuniper, LinearAlgebra, Test
-    import Cbc
+    using Cbc: Cbc
 
     f(x::AbstractVector) = sqrt(max(x[2], 0.0))
     g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
@@ -182,7 +182,7 @@ end
 
 @testitem "callback kwarg is not silently dropped" begin
     using NonconvexJuniper, Test
-    import NonconvexCore
+    using NonconvexCore: NonconvexCore
 
     f(x::AbstractVector) = sqrt(max(x[2], 0.0))
     g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]
@@ -202,7 +202,7 @@ end
 
 @testitem "direct option kwargs populate the options" begin
     using NonconvexJuniper, Test
-    import NonconvexCore
+    using NonconvexCore: NonconvexCore
 
     f(x::AbstractVector) = sqrt(max(x[2], 0.0))
     g(x::AbstractVector, a, b) = (a * x[1] + b)^3 - x[2]

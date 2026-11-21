@@ -1,5 +1,8 @@
 # NEWS
 
+## 0.6.4
+
+- Docs: package-name section titles and left-aligned logos (no code changes).
 ## 0.6.3
 
 - Added docstrings for `JuniperIpoptAlg` and `JuniperIpoptOptions` (REPL help and API reference).

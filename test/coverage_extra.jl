@@ -80,9 +80,9 @@ end
 
 @testitem "continuous solve, result fields and workspace construction" begin
     using NonconvexJuniper, NonconvexCore, LinearAlgebra, Test
-    import JuMP
-    import Cbc
-    import Ipopt
+    using JuMP: JuMP
+    using Cbc: Cbc
+    using Ipopt: Ipopt
     import MathOptInterface as MOI
 
     alg = JuniperIpoptAlg()
@@ -179,7 +179,7 @@ end
 
 @testitem "discrete solves (binary and integer variables)" begin
     using NonconvexJuniper, LinearAlgebra, Test
-    import Ipopt
+    using Ipopt: Ipopt
     import MathOptInterface as MOI
 
     alg = JuniperIpoptAlg()
@@ -210,7 +210,7 @@ end
 
 @testitem "error paths" begin
     using NonconvexJuniper, NonconvexCore, Test
-    import Ipopt
+    using Ipopt: Ipopt
 
     alg = JuniperIpoptAlg()
 
